@@ -1,6 +1,6 @@
 var casper = require('casper').create();
 
-casper.options.waitTimeout = 3000;
+casper.options.waitTimeout = 10000;
 var address = "7807 Maple Run Ct";
 address = address.replace(/_/g," ");
 function splitAddress(address){
@@ -22,28 +22,30 @@ console.log(addressSplit);//Console check to see if the address was split correc
 
 casper.start('https://aacounty.munisselfservice.com/citizens/UtilityBilling/Default.aspx', function() {
    // Wait for the page to be loaded
-   this.waitForSelector('ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_AddressSearchFieldLayout_ctl01_StreetNumberTextBox');
-   this.waitForSelector('ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_StreetNameSearchFieldLayoutItem_ctl01_StreetNameTextBox');
-   this.waitForSelector('ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_FormLayoutItem7_ctl01_Button1');
+   this.waitForSelector('#ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_AddressSearchFieldLayout_ctl01_StreetNumberTextBox');
+   this.waitForSelector('#ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_StreetNameSearchFieldLayoutItem_ctl01_StreetNameTextBox');
+   this.waitForSelector('#ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_FormLayoutItem7_ctl01_Button1');
 });
 console.log("Waiting on page...");//
 casper.then(function() {
 	//var fixed_address = fixAddress(address);
-	this.sendKeys('ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_AddressSearchFieldLayout_ctl01_StreetNumberTextBox', addressSplit[0]);
-  this.sendKeys('#ctl00_ctl00_rootMasterContent_LocalContentPlaceHolder_ucServiceAddress_txtServiceAddress', addressSplit[1]);
-	this.click('ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_FormLayoutItem7_ctl01_Button1');
+	this.sendKeys('#ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_AddressSearchFieldLayout_ctl01_StreetNumberTextBox', addressSplit[0]);
+  this.sendKeys('#ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_StreetNameSearchFieldLayoutItem_ctl01_StreetNameTextBox', addressSplit[1]);
+  casper.capture("Page1.pdf");
+	this.click('#ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_FormLayoutItem7_ctl01_Button1');
 });
 console.log("Navigating to second page...");//
 casper.then(function() {
 	//var fixed_address = fixAddress(address);
-	this.click('ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_AccountsGridView_ctl02_BillsLink');
+	casper.capture("Page2.pdf");
+	this.click('#ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_AccountsGridView_ctl02_BillsLink');
 });
 console.log("Navigating to third page...");//
 //Capture Information
 
 casper.then(function() {
 	//var fixed_address = fixAddress(address);
-	this.click('ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_OutstandingBillsGrid_ctl02_OutstandingDetailsButton');
+	this.click('#ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_OutstandingBillsGrid_ctl02_OutstandingDetailsButton');
 });
 
 console.log("Navigating to fourth and final page...");//
