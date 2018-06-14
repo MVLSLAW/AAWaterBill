@@ -1,11 +1,17 @@
 var casper = require('casper').create();
 
 casper.options.waitTimeout = 10000;
-var address = "7807 Maple Run Ct";
+
+//Declare address variable
+var address = "7805 Maple Run Court";
+
 address = address.replace(/_/g," ");
+
+/*splitAddress function seperates the number(s)
+  from the adress and puts them into an array...*/
 function splitAddress(address){
   var sAddy = address.split(' '); //splits address
-  var jAddy = [];//this will be the array that will hold the number in index 0 and the adress in index 1
+  var jAddy = [];//this will be the array that will hold the number(s) in index 0 and the adress in index 1
 
   jAddy.push(sAddy[0]);// pushes the number to index 0
   //jAddy.split(" ");
@@ -18,33 +24,47 @@ function splitAddress(address){
 
 var addressSplit=splitAddress(address);
 
-console.log(addressSplit);//Console check to see if the address was split correctly
+console.log(addressSplit);//Console check to see if the address was split into an array correctly
+
+//variable required when using x code
+var x = require('casper').selectXPath
 
 casper.start('https://aacounty.munisselfservice.com/citizens/UtilityBilling/Default.aspx', function() {
-   // Wait for the page to be loaded
+   // Waits for the page to be loaded
    this.waitForSelector('#ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_AddressSearchFieldLayout_ctl01_StreetNumberTextBox');
    this.waitForSelector('#ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_StreetNameSearchFieldLayoutItem_ctl01_StreetNameTextBox');
    this.waitForSelector('#ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_FormLayoutItem7_ctl01_Button1');
 });
+
+
 console.log("Waiting on page...");//
-casper.then(function() {
-	//var fixed_address = fixAddress(address);
-	this.sendKeys('#ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_AddressSearchFieldLayout_ctl01_StreetNumberTextBox', addressSplit[0]);
-  this.sendKeys('#ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_StreetNameSearchFieldLayoutItem_ctl01_StreetNameTextBox', addressSplit[1]);
-  casper.capture("Page1.pdf");
-	this.click('#ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_FormLayoutItem7_ctl01_Button1');
-});
-console.log("Navigating to second page...");//
-casper.then(function() {
-	//var fixed_address = fixAddress(address);
-	casper.capture("Page2.pdf");
-	this.click('#ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_AccountsGridView_ctl02_BillsLink');
-});
-console.log("Navigating to third page...");//
-//Capture Information
 
 casper.then(function() {
-	//var fixed_address = fixAddress(address);
+	var fixed_address = fixAddress(addressSplit[1]);
+  console.log(fixed_address);//Console log to make sure thefixAddress function worked properly
+	this.sendKeys('#ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_AddressSearchFieldLayout_ctl01_StreetNumberTextBox', addressSplit[0]);
+  this.sendKeys('#ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_StreetNameSearchFieldLayoutItem_ctl01_StreetNameTextBox', fixed_address);
+  casper.capture("Page1.pdf");//makes sure the inputs on this page were correct
+	//Waits for the 'submit' xcode element to load
+  casper.waitForSelector(x('//*[@id="ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_FormLayoutItem7_ctl01_Button1"]'), function () {
+    casper.click(x('//*[@id="ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_Control_FormLayoutItem7_ctl01_Button1"]'));
+  });
+});
+
+console.log("Navigating to second page...");//
+
+casper.then(function() {
+	casper.capture("Page2.pdf");
+  //error here
+  casper.waitForSelector(x('//*[@id="ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_AccountsGridView_ctl02_BillsLink"]'), function () {
+    casper.click(x('//*[@id="ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_AccountsGridView_ctl02_BillsLink"]'));
+});
+
+});
+console.log("Navigating to third page...");//
+
+casper.then(function() {
+  casper.capture("Page3.pdf");
 	this.click('#ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_OutstandingBillsGrid_ctl02_OutstandingDetailsButton');
 });
 
@@ -55,12 +75,10 @@ casper.then(function() {
 
 	this.wait(5000, function() {
 		var currentwaterbill = "UNKNOWN";
-    console.log("2");
-		if(this.exists('ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_TotalLabel')){
-			currentwaterbill = this.fetchText('ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_TotalLabel');
-      console.log("3");
-      console.log("The Current water bill is: $"+currentwaterbill);
-			//this.echo("Current Water Bill: " + currentwaterbill);
+		if(this.exists('#ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_TotalLabel')){
+			currentwaterbill = this.fetchText('#ctl00_ctl00_PrimaryPlaceHolder_ContentPlaceHolderMain_TotalLabel');
+      //console.log("The Current water bill is: "+currentwaterbill);
+			this.echo("Current Water Bill: " + currentwaterbill);
 			var screenshot_name = "Water_Bill_" + address.replace(/ /g,"_") + '.pdf';
 			casper.capture("/var/www/html/API_Backend/Screenshots/" + screenshot_name);
 			var info = {'CurrentWaterBill':currentwaterbill};
@@ -78,11 +96,11 @@ casper.then(function() {
 	});
 
 });
-/*
+
 function fixAddress(address){
-	address[1] = address[1].trim();
-	var addressarray = address[1].split(" ");
-	for(var x = 0;x < addressarray[1].length;x++){
+	address = address.trim();
+	var addressarray = address.split(" ");
+	for(var x = 0;x < addressarray.length;x++){
 		switch(addressarray[x]){
 			case "Avenue":
 				addressarray[x] = "Ave";
@@ -123,6 +141,6 @@ function fixAddress(address){
 		}
 	}
 	return addressarray.join(" ");
-}*/
+}
 
 casper.run();
